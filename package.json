@@ -1,0 +1,173 @@
+{
+  "name": "opengo-copilot",
+  "publisher": "OpenGoCopilot",
+  "displayName": "OpenGo Copilot",
+  "description": "Secure multi-provider LLM bridge for VS Code Copilot Chat",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rzjulio/opengo-copilot"
+  },
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "opengo-copilot",
+        "displayName": "OpenGo Copilot",
+        "managementCommand": "opengo-copilot.manage"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "opengo_analyze_image",
+        "toolReferenceName": "analyzeImage",
+        "displayName": "OpenGo Analyze Image",
+        "modelDescription": "Analyze an image with a vision model and return a text description.",
+        "userDescription": "Analyze an image using OpenGo Vision.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "image_data": {
+              "type": "string",
+              "description": "Base64-encoded image data URL."
+            },
+            "prompt": {
+              "type": "string",
+              "description": "Instruction describing what to analyze in the image."
+            }
+          },
+          "required": [
+            "image_data",
+            "prompt"
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "opengo-copilot.manage",
+        "title": "Manage API Key",
+        "category": "OpenGo Copilot"
+      },
+      {
+        "command": "opengo-copilot.toggleDebug",
+        "title": "Toggle Debug Logging",
+        "category": "OpenGo Copilot"
+      },
+      {
+        "command": "opengo-copilot.openStatusPanel",
+        "title": "Open Status Panel",
+        "category": "OpenGo Copilot"
+      },
+      {
+        "command": "opengo-copilot.compareModels",
+        "title": "Compare Models",
+        "category": "OpenGo Copilot"
+      }
+    ],
+    "configuration": {
+      "title": "OpenGo Copilot",
+      "properties": {
+        "opengo.models.custom": {
+          "type": "array",
+          "default": [],
+          "description": "Custom model definitions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "displayName": { "type": "string" },
+              "contextWindow": { "type": "number" },
+              "maxOutputTokens": { "type": "number" },
+              "apiFormat": { "type": "string", "enum": ["openai", "anthropic"] },
+              "supportsVision": { "type": "boolean" },
+              "supportsTools": { "type": "boolean" },
+              "fixedTemperature": { "type": ["number", "null"] },
+              "reasoningEffort": { "type": ["string", "null"] },
+              "endpoint": { "type": ["string", "null"] }
+            },
+            "required": ["id", "displayName", "contextWindow", "apiFormat"]
+          }
+        },
+        "opengo.security.promptInjectionDefense": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable prompt injection detection and sanitization"
+        },
+        "opengo.security.logContent": {
+          "type": "boolean",
+          "default": false,
+          "description": "NEVER enable in production. Only metadata is logged by default."
+        },
+        "opengo.ui.showReasoningTokens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show reasoning/thinking tokens in chat"
+        },
+        "opengo.transport.requestTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "HTTP request timeout in ms"
+        },
+        "opengo.transport.streamTimeout": {
+          "type": "number",
+          "default": 60000,
+          "description": "SSE stream read timeout in ms"
+        },
+        "opengo.transport.maxRetries": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum retry attempts for retriable errors"
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "opengoStatusPanel",
+          "name": "OpenGo Status",
+          "when": "opengo.enabled"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "opengoStatusPanel",
+        "contents": "OpenGo Copilot is loading..."
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/ tests/",
+    "lint:fix": "eslint src/ tests/ --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "package:vsix": "npm run compile && vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.104.0",
+    "@vscode/vsce": "^3.9.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.30.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {}
+}

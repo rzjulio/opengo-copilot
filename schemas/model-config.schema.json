@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenGo Copilot Custom Model Configuration",
+  "description": "Schema for defining custom LLM models in settings.json",
+  "type": "object",
+  "properties": {
+    "opengo.models.custom": {
+      "type": "array",
+      "description": "List of custom model definitions",
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "contextWindow", "apiFormat"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique model identifier used in API requests"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name shown in the model picker"
+          },
+          "contextWindow": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Maximum context window size in tokens"
+          },
+          "maxOutputTokens": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Maximum output tokens per request"
+          },
+          "apiFormat": {
+            "type": "string",
+            "enum": ["openai", "anthropic"],
+            "description": "API format used by this model"
+          },
+          "supportsVision": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the model supports image inputs"
+          },
+          "supportsTools": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the model supports function calling"
+          },
+          "fixedTemperature": {
+            "type": ["number", "null"],
+            "description": "If set, overrides any user temperature preference"
+          },
+          "reasoningEffort": {
+            "type": ["string", "null"],
+            "enum": ["xhigh", "high", "medium", "low", "minimal", "none", null],
+            "description": "Reasoning effort level for thinking models"
+          },
+          "endpoint": {
+            "type": ["string", "null"],
+            "format": "uri",
+            "description": "Optional override for the API base URL"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
