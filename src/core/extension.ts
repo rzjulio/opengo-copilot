@@ -4,7 +4,7 @@ import { ConfigManager } from "./config";
 import { OpenGoChatProvider } from "../providers/chat-provider";
 import { registerTools } from "../tools/registry";
 import { StatusPanel } from "../ui/status-panel";
-import { log, getOutputChannel } from "../utils/logger";
+import { log, getOutputChannel, setDebugEnabled } from "../utils/logger";
 import { fetchWithRetry } from "../transport/http-client";
 
 const EXTENSION_VERSION = "1.0.0";
@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(channel);
 
   const debugEnabled = context.globalState.get<boolean>("opengo.debug", false);
-  process.env.OPENGO_DEBUG = debugEnabled ? "1" : "0";
+  setDebugEnabled(debugEnabled);
 
   log("activate", `Extension activated. Debug: ${debugEnabled}`);
 
@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
       const current = context.globalState.get<boolean>("opengo.debug", false);
       const next = !current;
       await context.globalState.update("opengo.debug", next);
-      process.env.OPENGO_DEBUG = next ? "1" : "0";
+      setDebugEnabled(next);
       if (next) {
         const confirm = await vscode.window.showWarningMessage(
           "Debug logging enabled. Message CONTENT is NEVER logged. Only metadata is recorded. Continue?",
@@ -78,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
         if (confirm !== "Yes") {
           await context.globalState.update("opengo.debug", false);
-          process.env.OPENGO_DEBUG = "0";
+          setDebugEnabled(false);
           vscode.window.showInformationMessage("Debug logging cancelled.");
           return;
         }

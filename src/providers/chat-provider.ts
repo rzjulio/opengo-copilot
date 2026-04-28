@@ -25,6 +25,7 @@ import { log } from "../utils/logger";
 import { estimateMessageTokens } from "../utils/tokens";
 import { generateToolCallId } from "../utils/crypto";
 import { showConsentFallback, showTransient, showError } from "../ui/notifications";
+import { sanitizeInput } from "../pipeline/input-guard";
 import { StatusPanel } from "../ui/status-panel";
 import { ModelInfo, AdapterConfig, StreamResponse, ChatMessage } from "../types";
 
@@ -122,6 +123,27 @@ export class OpenGoChatProvider implements LanguageModelChatProvider {
         return;
       }
 
+      if (this.config.promptInjectionDefense) {
+        for (const msg of messages) {
+          for (const part of msg.content) {
+            const text =
+              part instanceof vscode.LanguageModelTextPart
+                ? part.value
+                : typeof part === "object" && part !== null && "value" in part
+                ? (part as { value?: unknown }).value
+                : undefined;
+            if (typeof text === "string") {
+              const { threats } = sanitizeInput(text);
+              if (threats.length > 0) {
+                throw new Error(
+                  "Potential prompt injection detected. Please rephrase your request."
+                );
+              }
+            }
+          }
+        }
+      }
+
       const inputTokens = estimateMessageTokens(messages as never, model.id);
       const effectiveMaxInput = Math.max(1, model.maxInputTokens - CONTEXT_WINDOW_SAFETY_MARGIN);
       if (inputTokens > effectiveMaxInput) {
@@ -141,7 +163,7 @@ export class OpenGoChatProvider implements LanguageModelChatProvider {
       if (hasImages && !route.supportsVision) {
         const visionModel = this.config.models.find((m) => m.supportsVision);
         if (visionModel) {
-          const consent = await showConsentFallback(model.id, visionModel.displayName);
+          const consent = await showConsentFallback(model.id, visionModel.displayName, this.globalState);
           if (consent) {
             effectiveModelId = visionModel.id;
             showTransient(`Using ${visionModel.displayName} for image analysis.`);
@@ -203,17 +225,16 @@ export class OpenGoChatProvider implements LanguageModelChatProvider {
       );
 
       if (!response.ok) {
-        const text = await response.text();
         let message = `OpenGo API error: ${response.status} ${response.statusText}`;
         if (response.status === 401 || response.status === 403) {
-          message = `Authentication failed. Your API key may be invalid or expired.\n${message}`;
+          message = `Authentication failed. Your API key may be invalid or expired. (${response.status})`;
         } else if (response.status === 429) {
           const retryAfter = response.headers.get("retry-after");
-          message = `Rate limited. ${retryAfter ? `Retry after ${retryAfter}s. ` : ""}\n${message}`;
+          message = `Rate limited. ${retryAfter ? `Retry after ${retryAfter}s. ` : ""}(${response.status})`;
         } else if (response.status >= 500 && response.status < 600) {
-          message = `Server error. The OpenGo service may be experiencing issues.\n${message}`;
+          message = `Server error. The OpenGo service may be experiencing issues. (${response.status})`;
         }
-        throw new Error(`${message}\n${text}`);
+        throw new Error(message);
       }
 
       // Stream processing

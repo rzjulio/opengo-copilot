@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { log, isDebugEnabled } from "../../src/utils/logger";
+import { log, setDebugEnabled } from "../../src/utils/logger";
 
 describe("Logger", () => {
   let appendLineSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    process.env.OPENGO_DEBUG = "1";
+    setDebugEnabled(true);
     appendLineSpy = vi.fn();
     const mockChannel = { appendLine: appendLineSpy };
     // @ts-expect-error internal access
@@ -13,13 +13,13 @@ describe("Logger", () => {
   });
 
   afterEach(() => {
-    process.env.OPENGO_DEBUG = "0";
+    setDebugEnabled(false);
     // @ts-expect-error internal access
     (globalThis as Record<string, unknown>).__opengoOutputChannel = undefined;
   });
 
   it("does not log when debug is disabled", () => {
-    process.env.OPENGO_DEBUG = "0";
+    setDebugEnabled(false);
     log("test", "hello");
     expect(appendLineSpy).not.toHaveBeenCalled();
   });

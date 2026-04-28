@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Adapter, RequestContext, extractRequestContext } from "./base-adapter";
 import { ChatMessage, ChatRequest, Json, JsonObject, ModelInfo, AdapterConfig, Tool } from "../types";
+import { generateToolCallId } from "../utils/crypto";
 import { log } from "../utils/logger";
 import { sha256Hex } from "../utils/crypto";
 
@@ -92,7 +93,7 @@ export class OpenAIAdapter implements Adapter {
             } catch {
               // incomplete JSON
             }
-            return { id: tc.id ?? `call_${Math.random().toString(36).slice(2, 10)}`, name: tc.function.name, args };
+            return { id: tc.id ?? generateToolCallId(), name: tc.function.name, args };
           })
           .filter((t): t is NonNullable<typeof t> => !!t);
       }

@@ -33,6 +33,7 @@ export function sanitizeInput(text: string): {
 
   const threats: string[] = [];
   for (const pattern of INJECTION_PATTERNS) {
+    pattern.lastIndex = 0;
     if (pattern.test(normalized)) {
       threats.push(`Matched pattern: ${pattern.source}`);
     }

@@ -19,9 +19,9 @@ export class CircuitBreaker {
       if (Date.now() - this.lastFailureTime >= this.resetTimeoutMs) {
         this.state = "half-open";
         log("circuit-breaker", "Transitioning to half-open");
-      } else {
-        return true;
+        return false;
       }
+      return true;
     }
     return false;
   }
@@ -37,7 +37,7 @@ export class CircuitBreaker {
   recordFailure(): void {
     this.failures += 1;
     this.lastFailureTime = Date.now();
-    if (this.failures >= this.failureThreshold) {
+    if (this.failures >= this.failureThreshold && this.state !== "open") {
       this.state = "open";
       log("circuit-breaker", `Opened after ${this.failures} failures`);
     }

@@ -23,20 +23,27 @@ export function getOutputChannel(): vscode.OutputChannel {
   return channel;
 }
 
+let _debugEnabled = false;
+let _contentLoggingEnabled = false;
+
+export function setDebugEnabled(v: boolean): void {
+  _debugEnabled = v;
+}
+
+export function setContentLoggingEnabled(v: boolean): void {
+  _contentLoggingEnabled = v;
+}
+
 export function isDebugEnabled(): boolean {
-  return process.env.OPENGO_DEBUG === "1";
+  return _debugEnabled;
 }
 
 export function isContentLoggingEnabled(): boolean {
-  return process.env.OPENGO_DEBUG_CONTENT === "1";
+  return _contentLoggingEnabled;
 }
 
-/**
- * Safe logger: NEVER logs message content, images, or tool results.
- * Only metadata, lengths, status codes, and IDs.
- */
 export function log(label: string, value: unknown): void {
-  if (!isDebugEnabled()) return;
+  if (!_debugEnabled) return;
 
   const channel = getOutputChannel();
   let message: string;
@@ -73,7 +80,8 @@ function sanitizeForLog(value: unknown): unknown {
       lower.includes("key") ||
       lower.includes("secret") ||
       lower.includes("token") ||
-      lower.includes("password")
+      lower.includes("password") ||
+      lower.includes("authorization")
     ) {
       if (typeof val === "string") {
         result[key] = `<string:${val.length} chars>`;

@@ -78,15 +78,11 @@ export function applyReasoningContentWorkaround(
 
 export function sanitizeSystemPromptForModel(
   system: string | undefined,
-  modelId: string
+  _modelId: string
 ): string | undefined {
   if (typeof system !== "string" || system.trim().length === 0) return undefined;
-  if (!modelId.startsWith("deepseek-")) return system;
-  // DeepSeek identity anchoring: replace known identity leaks
-  return (
-    system
-      .replace(/\bClaude Code\b/gi, "GitHub Copilot")
-      .replace(/\bClaude\b/gi, "GitHub Copilot")
-      .replace(/\bAnthropic\b/gi, "OpenGo Copilot")
-  );
+  return system
+    .replace(/\bClaude Code\b/gi, "GitHub Copilot")
+    .replace(/\bClaude\b/gi, "GitHub Copilot")
+    .replace(/\bAnthropic\b/gi, "OpenGo Copilot");
 }

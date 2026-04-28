@@ -1,7 +1,29 @@
 import * as vscode from "vscode";
 import { ModelInfo, DEFAULT_MODELS } from "../types";
+import { log } from "../utils/logger";
 
 const CONFIG_SECTION = "opengo";
+
+const ALLOWED_HOSTS = ["opencode.ai"];
+
+function validateEndpoint(endpoint: string): string {
+  try {
+    const url = new URL(endpoint);
+    if (url.protocol !== "https:") {
+      log("config", `Rejected non-HTTPS endpoint: ${url.hostname}`);
+      return "https://opencode.ai/zen/go/v1";
+    }
+    const host = url.hostname.toLowerCase();
+    if (!ALLOWED_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`))) {
+      log("config", `Rejected unknown host: ${host}`);
+      return "https://opencode.ai/zen/go/v1";
+    }
+    return endpoint;
+  } catch {
+    log("config", `Rejected invalid endpoint: ${endpoint}`);
+    return "https://opencode.ai/zen/go/v1";
+  }
+}
 
 export class ConfigManager {
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -61,8 +83,9 @@ export class ConfigManager {
     return colon > 0 ? id.slice(0, colon) : id;
   }
 
-  getEndpointForModel(modelId: string): string {
+getEndpointForModel(modelId: string): string {
     const info = this.getModelInfo(modelId);
-    return info?.endpoint ?? "https://opencode.ai/zen/go/v1";
+    const raw = info?.endpoint ?? "https://opencode.ai/zen/go/v1";
+    return validateEndpoint(raw);
   }
 }

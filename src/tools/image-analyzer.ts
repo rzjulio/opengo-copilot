@@ -106,7 +106,8 @@ export class OpenGoAnalyzeImageTool implements vscode.LanguageModelTool<{
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Vision API error: ${response.status} ${text}`);
+      const sanitized = text.length > 200 ? text.slice(0, 200) + "..." : text;
+      throw new Error(`Vision API error: ${response.status}. ${sanitized}`);
     }
 
     const data = (await response.json()) as {

@@ -2,8 +2,12 @@ import * as vscode from "vscode";
 
 export async function showConsentFallback(
   originalModel: string,
-  fallbackModel: string
+  fallbackModel: string,
+  globalState?: vscode.Memento
 ): Promise<boolean> {
+  const stateKey = `opengo.visionConsent.${originalModel}`;
+  if (globalState?.get<boolean>(stateKey)) return true;
+
   const result = await vscode.window.showInformationMessage(
     `The model "${originalModel}" does not support images. Use "${fallbackModel}" to analyze this image?`,
     { modal: false },
@@ -12,7 +16,7 @@ export async function showConsentFallback(
     "Always"
   );
   if (result === "Always") {
-    // Store preference in global state
+    await globalState?.update(stateKey, true);
     return true;
   }
   return result === "Yes";
